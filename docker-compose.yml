@@ -56,7 +56,7 @@ services:
     labels: # traefik example labels
       - "traefik.enable=true"
       - "traefik.http.routers.recipes.rule=Host(`recipes.mydomain.com`, `recipes.myotherdomain.com`)"
-      - "traefik.http.routers.recipes.entrypoints=web" # your https endpoint
+      - "traefik.http.routers.recipes.entrypoints=web" # your http endpoint
     depends_on:
       - web_recipes
     networks:
