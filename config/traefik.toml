@@ -1,0 +1,22 @@
+[api]
+  insecure=true
+
+[providers.docker]
+  endpoint = "unix:///var/run/docker.sock"
+  exposedByDefault = false
+  network = "traefik"
+
+#[log]
+#  level = "DEBUG"
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+
+
+[certificatesResolvers.le_resolver.acme]
+
+  email = "you_email@mail.com"
+  storage = "/letsencrypt/acme.json"
+
+  tlsChallenge=false

@@ -1,0 +1,73 @@
+version: "3"
+services:
+
+  traefik:
+    image: traefik:v2.3.6
+    restart: always
+    command:
+      - --accesslog
+      - --api.insecure=true
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./config:/etc/traefik/"
+    networks:
+      - default
+    ports:
+      - 80:80
+      - 8082:8080
+      - 443:443
+
+  db_recipes:
+    restart: always
+    image: postgres:11-alpine
+    volumes:
+      - ./postgresql:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+    networks:
+      - default
+
+  web_recipes:
+    restart: always
+    image: vabene1111/recipes
+    env_file:
+      - ./.env
+    volumes:
+      - staticfiles:/opt/recipes/staticfiles
+      - nginx_config:/opt/recipes/nginx/conf.d
+      - ./mediafiles:/opt/recipes/mediafiles
+    depends_on:
+      - db_recipes
+    networks:
+      - default
+
+  nginx_recipes:
+    image: nginx:mainline-alpine
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - nginx_config:/etc/nginx/conf.d:ro
+      - staticfiles:/static:ro
+      - ./mediafiles:/media:ro
+    labels: # traefik example labels
+      - "traefik.enable=true"
+      - "traefik.http.routers.recipes.rule=Host(`recipes.mydomain.com`, `recipes.myotherdomain.com`)"
+      - "traefik.http.routers.recipes.entrypoints=web" # your https endpoint
+    depends_on:
+      - web_recipes
+    networks:
+      - default
+      - traefik
+
+networks:
+  default:
+  traefik: # This is your external traefik network
+    external: true
+
+volumes:
+  nginx_config:
+  staticfiles:
